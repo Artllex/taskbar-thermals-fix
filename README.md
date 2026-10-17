@@ -44,7 +44,7 @@ Initial validation environment: **Windows 11 25H2 x64, build 26200.9711; Windhaw
 
 ## Build from source
 
-Prerequisites: Windows x64, .NET 8 SDK, the **Windhawk 1.7.3 offline distribution** including its compiler/SDK, and **Inno Setup 6**.
+Prerequisites: Windows x64, **.NET SDK 8.0.426** (pinned in `global.json`), the **Windhawk 1.7.3 offline distribution** including its compiler/SDK, and **Inno Setup 6**.
 
 ```powershell
 .\scripts\build.ps1

@@ -7,12 +7,14 @@ param(
 )
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
+Push-Location $root
+try {
 $build=Join-Path $root 'build'
 $payload=Join-Path $build 'payload'
 $dist=Join-Path $root 'dist'
 New-Item -ItemType Directory -Path $payload,$dist -Force | Out-Null
 $project=Join-Path $root 'vendor\TaskbarThermals\TaskbarThermals.csproj'
-& $Dotnet restore $project --locked-mode
+& $Dotnet restore $project --locked-mode -r win-x64 -p:PublishSingleFile=true -p:SelfContained=false -p:IncludeNativeLibrariesForSelfExtract=true
 if($LASTEXITCODE){throw 'Application dependency restore failed.'}
 & $Dotnet publish $project --no-restore -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:IncludeSourceRevisionInInformationalVersion=false -o (Join-Path $build 'application')
 if($LASTEXITCODE){throw 'Application build failed.'}
@@ -70,3 +72,4 @@ if(!$SkipInstaller){
  if($LASTEXITCODE){throw 'Installer compilation failed.'}
 }
 Write-Output "Built package in $payload"
+} finally {Pop-Location}

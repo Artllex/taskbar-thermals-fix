@@ -44,7 +44,7 @@ Usuwanie: **Ustawienia Windows → Aplikacje → Zainstalowane aplikacje → Tas
 
 ## Budowanie ze źródeł
 
-Wymagania: Windows x64, .NET 8 SDK, **dystrybucja offline Windhawk 1.7.3** z kompilatorem i SDK oraz **Inno Setup 6**.
+Wymagania: Windows x64, **.NET SDK 8.0.426** (wersja przypięta w `global.json`), **dystrybucja offline Windhawk 1.7.3** z kompilatorem i SDK oraz **Inno Setup 6**.
 
 ```powershell
 .\scripts\build.ps1
