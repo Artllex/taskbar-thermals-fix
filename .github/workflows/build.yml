@@ -1,0 +1,44 @@
+name: Build and test
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.426
+      - name: Install pinned build tools
+        shell: pwsh
+        run: |
+          function Download-Verified($url, $file, $hash) {
+            Invoke-WebRequest -Uri $url -OutFile $file
+            if ((Get-FileHash $file -Algorithm SHA256).Hash -ne $hash) { throw "Download hash mismatch: $file" }
+          }
+          Download-Verified 'https://github.com/ramensoftware/windhawk/releases/download/v1.7.3/windhawk_setup_offline.exe' "$env:RUNNER_TEMP\windhawk.exe" '4D93016570F982326EEBDFC9068E924FF21F6448534EA32672BB4C1D52A8193B'
+          Download-Verified 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe' "$env:RUNNER_TEMP\inno.exe" '9C73C3BAE7ED48D44112A0F48E66742C00090BDB5BEF71D9D3C056C66E97B732'
+          $p = Start-Process "$env:RUNNER_TEMP\windhawk.exe" -ArgumentList '/S' -Wait -PassThru -WindowStyle Hidden
+          if ($p.ExitCode -ne 0) { throw "Windhawk installation failed: $($p.ExitCode)" }
+          $p = Start-Process "$env:RUNNER_TEMP\inno.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /ALLUSERS' -Wait -PassThru -WindowStyle Hidden
+          if ($p.ExitCode -ne 0) { throw "Inno Setup installation failed: $($p.ExitCode)" }
+      - name: Build installer
+        shell: pwsh
+        run: ./scripts/build.ps1
+      - name: Test installer lifecycle
+        shell: pwsh
+        run: ./tests/installer.tests.ps1
+      - name: Create checksums
+        shell: pwsh
+        run: |
+          $lines = Get-ChildItem dist -File -Filter '*.exe' | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name }
+          $lines | Set-Content dist/SHA256SUMS.txt -Encoding ascii
+      - uses: actions/upload-artifact@v7
+        with:
+          name: TaskbarThermalsFix-1.0.0
+          path: dist/*
